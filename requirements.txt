@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+hashids
+pyyaml
+colorlog
+orator
+pydantic
+psycopg2
+sqlalchemy
+pandas
+BeautifulSoup
