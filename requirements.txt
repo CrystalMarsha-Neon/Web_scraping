@@ -5,7 +5,7 @@ pyyaml
 colorlog
 orator
 pydantic
-psycopg2
+psycopg2-binary==2.8.6
 sqlalchemy
-pandas
-BeautifulSoup
+bs4
+requests

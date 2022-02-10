@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  app_final_crystal:
+    build:
+      context: .
+      dockerfile: Dockerfile_slimbuster
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    volumes:
+      - .:/scrapeguardian
+    ports:
+      - 8001:8001
+    depends_on:
+      - database 
+  
+  database:
+    image: postgres
+    volumes:
+      - newpgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+    expose:
+      - 5432
+
+volumes:
+  newpgdata:
+    external: true
+    name:
+      7b84cb24da08631f9e85a25fe8a646625809a29df498b8aeec558e42e21b55f0

@@ -12,13 +12,12 @@ SALT = PARAMS.SALT.salt
 
 class ControllerScraping(object):
     @classmethod
-    def get_link_scraping(cls,page):
-        print(page)
+    def get_link_scraping(cls,start_page,end_page):
         result = BaseResponse()
         result.status = 400
         try:
             #mengambil data dalam sebuah page
-            data = link_news(int(page)).get_single_link()
+            data = link_news(int(start_page),int(end_page)).get_single_link()
             result.status = 200
             result.message = "Success"
             result.data = {"link": data}
@@ -30,7 +29,7 @@ class ControllerScraping(object):
         return result
 
     @classmethod
-    def get_data_scraping(cls,page):
+    def get_data_scraping(cls,start_page,end_page):
         db = SessionLocal()
         result = BaseResponse()
         result.status = 400
@@ -40,11 +39,11 @@ class ControllerScraping(object):
         if no is None:
             no = 0
         try:
-            for i in range(0,(int(page))*9):
-                data = news_scraping(link_news(int(page)).get_single_link()[i]).get_news()
+            for i in range(0,(int(end_page)-int(start_page)+1)*9-1):
+                data = news_scraping(link_news(int(start_page),int(end_page)).get_single_link()[i]).get_news()
                 data['no'] =  no+i+1
                 #case jika data url match dengan data di database
-                if conn.table('records').where('url','=',data['url']).first():
+                if conn.table('records').where('url','=',data['url']).first(): 
                     data['status'] = 404
                     data['message'] = "data is already in database"
                     hasil.append(data)
@@ -126,52 +125,3 @@ class ControllerScraping(object):
             result.status = 400
             result.message = str(e)
         return result
-
-    @classmethod
-    def insert_data_scraping_csv(cls,input_data):
-        db = SessionLocal()
-        result = BaseResponse()
-        result.status = 400
-        hasil = []
-        try:
-            file_location = input_data['file_location']
-            with open(str(file_location), "r") as f:
-                csv_reader = csv.DictReader(f)
-                for row in csv_reader:
-                    #case jika data url atau no match dengan data di database
-                    if conn.table('records').where('no','=',row['no']).or_where('url','=',row['url']).first():
-                        row['status'] = 404
-                        row['message'] = "data is already in database"
-                        hasil.append(row)    
-                    else:
-                    #case jika data url atau no belum ada di database
-                        row['status'] = 200
-                        row['message'] = "database input success"
-                        db_record = ScrapingModels.Record(
-                            no=row["no"],
-                            title=row["title"].strip(),
-                            author=row["author"],
-                            date=row["date"],
-                            content=row["content"],
-                            link_picture=row['link_picture'],
-                            url =row['url']
-                        )
-                        db.add(db_record)
-                        db.commit()
-                        hasil.append(row)
-                result.data = {"hasil":hasil} 
-                result.status = 200
-                result.message = "success"
-                Log.info(result.message) 
-        except Exception as e:
-            Log.error(e)
-            result.status = 400
-            result.message = str(e)
-        db.close()
-        return result
-
-
-
-
-
-        

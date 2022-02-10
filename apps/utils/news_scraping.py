@@ -1,16 +1,16 @@
 from bs4 import BeautifulSoup
 from datetime import datetime
 import requests
-import pandas as pd
 #mendapatkan link berita
 class link_news:
-    def __init__(self,page):
-        self.page = page
+    def __init__(self,start_page,end_page):
+        self.start_page = start_page
+        self.end_page = end_page
 
     def get_single_link(self):
         all_link = []
         single_link = []
-        for i in range(1,self.page+1):
+        for i in range(self.start_page,self.end_page+1):
             base_url = "https://www.detik.com"
             second_url = "/search/searchall?query=finance&siteid=29&sortby=time&page=%s" % i
             headers = {"Accept-Language" : "en-US, en;q=0.5"}
@@ -31,9 +31,47 @@ class link_news:
         unique_link = list(set(single_link))
         return unique_link
 
+#mengubah format date
+class news_date_format:
+    def __init__(self,date):
+        self.date = date
+        
+    def bulan(self):
+        month_date = self.date.split()[2]
+        if month_date == 'Jan':
+            month = '01'
+        elif month_date == 'Feb':
+            month = '02'
+        elif month_date == 'Mar':
+            month = '03'
+        elif month_date == 'Apr':
+            month = '04'
+        elif month_date == 'Mei':
+            month = '05'
+        elif month_date == 'Jun':
+            month = '06'
+        elif month_date == 'Jul':
+            month = '07'
+        elif month_date == 'Agu':
+            month = '08'
+        elif month_date == 'Sep':
+            month = '09'
+        elif month_date == 'Okt':
+            month = '10'
+        elif month_date == 'Nov':
+            month = '11'
+        elif month_date == 'Des':
+            month = '12'
+        return month
+    
+    def format_date(self):
+        date_of_post = self.date.split()[0]+' '+self.date.split()[1]+'-'+news_date_format.bulan(self)+'-'+self.date.split()[3]
+        return date_of_post  
+        
+#mendapatkan konten berita
 class news_scraping:
     def __init__(self,link):
-            self.link = link
+        self.link = link
     
     def get_news(self):
         title = []
@@ -47,14 +85,17 @@ class news_scraping:
 
         news = soup.find_all('article', class_='detail')
         for container in news:
-            #title     
-            title_name = container.find('h1',class_='detail__title').text.strip() if container.find('h1',class_='detail__title') else '-'
-
+            #title   
+            try:  
+                title_name = container.find('h1',class_='detail__title').text.strip() if container.find('h1',class_='detail__title') else '-'
+            except:
+                title_name.append('error')
             #author
             author_name = container.find('div',class_='detail__author').text.strip() if container.find('div',class_='detail__author') else '-'
 
             #date
             date_of_post = container.find('div',class_='detail__date').text.strip() if container.find('div',class_='detail__date') else '-'
+            date = news_date_format(date_of_post).format_date()
 
             #content
             news_content = container.find('div',class_ = 'detail__body-text itp_bodycontent').text.strip() if container.find('div',class_ = 'detail__body-text itp_bodycontent') else '-'
@@ -66,12 +107,15 @@ class news_scraping:
                 #mengantisipasi error karena link berbentuk video
                 image_tags.append('error')
 
-
         #mengubah menjadi data frame
         output['title'] = title_name
         output['author'] = author_name
-        output['date'] = date_of_post
+        output['date'] = date
         output['content'] =news_content.replace("\r\n","").replace('\n','')
         output['link_picture'] = image_tags
         output['url'] = self.link
         return output
+
+
+    
+    

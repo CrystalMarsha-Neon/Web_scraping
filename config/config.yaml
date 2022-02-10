@@ -32,7 +32,7 @@ allow_methods:
 
 database:
   development:
-    host: "localhost"
+    host: "database"
     port: 5432
     username: "postgres"
     password: "admin"
